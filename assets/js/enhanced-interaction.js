@@ -1,5 +1,6 @@
 /**
  * 增强交互功能 - 为网站添加更多动态效果
+ * 包含粒子背景、打字机效果、鼠标跟随、视差滚动和点击效果等
  */
 
 // 页面加载完成后执行
@@ -18,6 +19,27 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // 5. 添加页面元素的滚动显示动画
     enhanceScrollAnimation();
+    
+    // 6. 添加粒子背景效果
+    addParticleBackground();
+    
+    // 7. 添加打字机效果
+    addTypewriterEffect();
+    
+    // 8. 添加鼠标跟随效果
+    addMouseFollowerEffect();
+    
+    // 9. 添加视差滚动效果
+    addParallaxEffect();
+    
+    // 10. 添加页面点击效果
+    addClickEffect();
+    
+    // 11. 为标题添加渐入效果
+    enhanceTitleAnimation();
+    
+    // 12. 添加窗口大小变化时的响应式调整
+    addResponsiveAdjustments();
 });
 
 /**
@@ -35,6 +57,77 @@ function enhanceAvatarInteraction() {
             this.style.transform = 'scale(1) rotate(0)';
         });
     }
+}
+
+/**
+ * 增强标题动画效果
+ */
+function enhanceTitleAnimation() {
+    const title = document.querySelector('.panel-cover__title');
+    if (!title) return;
+    
+    // 添加标题的渐入和缩放效果
+    title.style.opacity = '0';
+    title.style.transform = 'scale(0.8)';
+    title.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+    
+    // 延迟执行，让其他元素先显示
+    setTimeout(() => {
+        title.style.opacity = '1';
+        title.style.transform = 'scale(1)';
+    }, 1500);
+    
+    // 为标题添加悬停效果
+    title.addEventListener('mouseenter', function() {
+        this.style.transform = 'scale(1.05)';
+        this.style.transition = 'transform 0.3s ease';
+    });
+    
+    title.addEventListener('mouseleave', function() {
+        this.style.transform = 'scale(1)';
+    });
+}
+
+/**
+ * 添加响应式调整
+ */
+function addResponsiveAdjustments() {
+    // 窗口大小变化时调整特效
+    function adjustEffectsForScreenSize() {
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+        
+        // 移动设备上优化粒子效果
+        const particleContainer = document.getElementById('particle-container');
+        if (particleContainer) {
+            particleContainer.style.opacity = isMobile ? '0.4' : '0.7';
+        }
+        
+        // 移动设备上关闭鼠标跟随效果以节省性能
+        const mouseFollower = document.getElementById('mouse-follower');
+        if (mouseFollower) {
+            mouseFollower.style.display = isMobile ? 'none' : 'block';
+        }
+    }
+    
+    // 初始执行一次
+    adjustEffectsForScreenSize();
+    
+    // 窗口大小变化时重新调整
+    window.addEventListener('resize', adjustEffectsForScreenSize);
+    
+    // 滚动时的性能优化
+    let lastScrollTime = 0;
+    const scrollThrottle = 16; // 约60fps
+    
+    window.addEventListener('scroll', function() {
+        const now = Date.now();
+        if (now - lastScrollTime < scrollThrottle) {
+            return;
+        }
+        lastScrollTime = now;
+        
+        // 这里可以添加滚动时需要执行的优化代码
+    });
 }
 
 /**
@@ -160,5 +253,291 @@ function enhanceScrollAnimation() {
         element.style.transform = 'translateY(20px)';
         element.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
         observer.observe(element);
+    });
+}
+
+/**
+ * 添加粒子背景效果
+ */
+function addParticleBackground() {
+    // 性能检测：如果设备性能较低，减少粒子数量
+    const isLowPerformance = window.matchMedia('(max-width: 768px)').matches || 
+                            navigator.userAgent.match(/mobile/i) !== null;
+    const particleCount = isLowPerformance ? 15 : 30;
+    
+    // 创建粒子容器
+    const particleContainer = document.createElement('div');
+    particleContainer.id = 'particle-container';
+    particleContainer.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: -1;
+        opacity: 0.7;
+    `;
+    document.body.appendChild(particleContainer);
+    
+    // 创建粒子
+    const particles = [];
+    
+    for (let i = 0; i < particleCount; i++) {
+        const particle = document.createElement('div');
+        const size = Math.random() * 3 + 1;
+        const x = Math.random() * 100;
+        const y = Math.random() * 100;
+        const speedX = (Math.random() - 0.5) * 0.3;
+        const speedY = (Math.random() - 0.5) * 0.3;
+        const opacity = Math.random() * 0.7 + 0.3;
+        
+        particle.style.cssText = `
+            position: absolute;
+            width: ${size}px;
+            height: ${size}px;
+            background-color: rgba(255, 255, 255, ${opacity});
+            border-radius: 50%;
+            left: ${x}%;
+            top: ${y}%;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        `;
+        
+        particleContainer.appendChild(particle);
+        particles.push({
+            element: particle,
+            x, y, size, speedX, speedY
+        });
+    }
+    
+    // 动画循环 - 使用requestAnimationFrame优化性能
+    let animationFrameId;
+    function animateParticles() {
+        particles.forEach(particle => {
+            particle.x += particle.speedX;
+            particle.y += particle.speedY;
+            
+            // 边界检测
+            if (particle.x < 0 || particle.x > 100) particle.speedX *= -1;
+            if (particle.y < 0 || particle.y > 100) particle.speedY *= -1;
+            
+            particle.element.style.left = `${particle.x}%`;
+            particle.element.style.top = `${particle.y}%`;
+        });
+        
+        animationFrameId = requestAnimationFrame(animateParticles);
+    }
+    
+    animateParticles();
+    
+    // 窗口隐藏时暂停动画，节省性能
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            cancelAnimationFrame(animationFrameId);
+        } else {
+            animateParticles();
+        }
+    });
+}
+
+/**
+ * 添加打字机效果
+ */
+function addTypewriterEffect() {
+    const subtitle = document.querySelector('.panel-cover__subtitle');
+    if (!subtitle) return;
+    
+    const originalText = subtitle.textContent;
+    subtitle.textContent = '';
+    
+    let index = 0;
+    let isTyping = true;
+    const typeSpeed = 100; // 打字速度
+    const deleteSpeed = 50; // 删除速度
+    const pauseTime = 2000; // 停留时间
+    
+    function type() {
+        if (index < originalText.length) {
+            // 模拟真人打字的随机延迟
+            const randomDelay = Math.random() * 30 + typeSpeed;
+            subtitle.textContent += originalText.charAt(index);
+            index++;
+            setTimeout(type, randomDelay);
+        } else {
+            isTyping = false;
+            setTimeout(deleteText, pauseTime);
+        }
+    }
+    
+    function deleteText() {
+        if (index > 0) {
+            subtitle.textContent = originalText.substring(0, index - 1);
+            index--;
+            setTimeout(deleteText, deleteSpeed);
+        } else {
+            isTyping = true;
+            setTimeout(type, typeSpeed);
+        }
+    }
+    
+    // 添加光标闪烁效果
+    const cursor = document.createElement('span');
+    cursor.className = 'typewriter-cursor';
+    cursor.textContent = '|';
+    cursor.style.cssText = `
+        margin-left: 3px;
+        animation: cursor-blink 1s infinite;
+        color: inherit;
+    `;
+    
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes cursor-blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+    
+    subtitle.appendChild(cursor);
+    
+    // 延迟开始打字机效果
+    setTimeout(type, 1000);
+}
+
+/**
+ * 添加鼠标跟随效果
+ */
+function addMouseFollowerEffect() {
+    const follower = document.createElement('div');
+    follower.id = 'mouse-follower';
+    follower.style.cssText = `
+        position: fixed;
+        width: 8px;
+        height: 8px;
+        background-color: rgba(255, 255, 255, 0.8);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 9999;
+        transform: translate(-50%, -50%);
+        transition: width 0.3s, height 0.3s, background-color 0.3s;
+        mix-blend-mode: screen;
+    `;
+    
+    document.body.appendChild(follower);
+    
+    let mouseX = 0;
+    let mouseY = 0;
+    let followerX = 0;
+    let followerY = 0;
+    const ease = 0.1; // 缓动系数
+    
+    // 鼠标移动时更新位置
+    document.addEventListener('mousemove', (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        follower.style.display = 'block';
+    });
+    
+    // 鼠标离开视窗时隐藏
+    document.addEventListener('mouseleave', () => {
+        follower.style.display = 'none';
+    });
+    
+    // 为链接添加交互效果
+    const links = document.querySelectorAll('a');
+    links.forEach(link => {
+        link.addEventListener('mouseenter', () => {
+            follower.style.width = '24px';
+            follower.style.height = '24px';
+            follower.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+        });
+        
+        link.addEventListener('mouseleave', () => {
+            follower.style.width = '8px';
+            follower.style.height = '8px';
+            follower.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+        });
+    });
+    
+    // 动画循环
+    function animateFollower() {
+        followerX += (mouseX - followerX) * ease;
+        followerY += (mouseY - followerY) * ease;
+        
+        follower.style.left = `${followerX}px`;
+        follower.style.top = `${followerY}px`;
+        
+        requestAnimationFrame(animateFollower);
+    }
+    
+    animateFollower();
+}
+
+/**
+ * 添加视差滚动效果
+ */
+function addParallaxEffect() {
+    const panel = document.getElementById('panel');
+    if (!panel) return;
+    
+    window.addEventListener('scroll', () => {
+        const scrollPosition = window.scrollY;
+        // 视差效果，滚动距离的1/5
+        panel.style.transform = `translateY(${scrollPosition * 0.2}px)`;
+        panel.style.backgroundPositionY = `${scrollPosition * 0.5}px`;
+    });
+}
+
+/**
+ * 添加页面点击效果
+ */
+function addClickEffect() {
+    document.addEventListener('click', (e) => {
+        const clickEffect = document.createElement('div');
+        const size = Math.random() * 40 + 20;
+        const x = e.clientX - size / 2;
+        const y = e.clientY - size / 2;
+        
+        clickEffect.style.cssText = `
+            position: fixed;
+            width: ${size}px;
+            height: ${size}px;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            left: ${x}px;
+            top: ${y}px;
+            pointer-events: none;
+            z-index: 9999;
+            transform: scale(0);
+            animation: click-animation 0.6s ease-out;
+        `;
+        
+        // 添加动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes click-animation {
+                0% {
+                    transform: scale(0);
+                    opacity: 1;
+                }
+                100% {
+                    transform: scale(3);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        document.body.appendChild(clickEffect);
+        
+        // 动画结束后移除元素
+        setTimeout(() => {
+            clickEffect.remove();
+            // 如果是动态创建的样式，也需要移除
+            if (style && style.parentNode === document.head) {
+                style.remove();
+            }
+        }, 600);
     });
 }
