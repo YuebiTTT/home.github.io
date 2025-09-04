@@ -23,10 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 6. 添加粒子背景效果
     addParticleBackground();
     
-    // 7. 添加打字机效果
-    addTypewriterEffect();
-    
-    // 8. 添加鼠标跟随效果
+    // 7. 添加鼠标跟随效果
     addMouseFollowerEffect();
     
     // 9. 添加视差滚动效果
@@ -338,71 +335,6 @@ function addParticleBackground() {
             animateParticles();
         }
     });
-}
-
-/**
- * 添加打字机效果
- */
-function addTypewriterEffect() {
-    const subtitle = document.querySelector('.panel-cover__subtitle');
-    if (!subtitle) return;
-    
-    const originalText = subtitle.textContent;
-    subtitle.textContent = '';
-    
-    let index = 0;
-    let isTyping = true;
-    const typeSpeed = 100; // 打字速度
-    const deleteSpeed = 50; // 删除速度
-    const pauseTime = 2000; // 停留时间
-    
-    function type() {
-        if (index < originalText.length) {
-            // 模拟真人打字的随机延迟
-            const randomDelay = Math.random() * 30 + typeSpeed;
-            subtitle.textContent += originalText.charAt(index);
-            index++;
-            setTimeout(type, randomDelay);
-        } else {
-            isTyping = false;
-            setTimeout(deleteText, pauseTime);
-        }
-    }
-    
-    function deleteText() {
-        if (index > 0) {
-            subtitle.textContent = originalText.substring(0, index - 1);
-            index--;
-            setTimeout(deleteText, deleteSpeed);
-        } else {
-            isTyping = true;
-            setTimeout(type, typeSpeed);
-        }
-    }
-    
-    // 添加光标闪烁效果
-    const cursor = document.createElement('span');
-    cursor.className = 'typewriter-cursor';
-    cursor.textContent = '|';
-    cursor.style.cssText = `
-        margin-left: 3px;
-        animation: cursor-blink 1s infinite;
-        color: inherit;
-    `;
-    
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes cursor-blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
-        }
-    `;
-    document.head.appendChild(style);
-    
-    subtitle.appendChild(cursor);
-    
-    // 延迟开始打字机效果
-    setTimeout(type, 1000);
 }
 
 /**
